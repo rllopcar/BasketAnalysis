@@ -35,9 +35,16 @@ bakery <- read.csv("breadBasket.csv") %>%
 ## We use a transaction object
 trans <- read.transactions("breadBasket.csv", format="single", cols=c(3,4), sep=",", rm.duplicates=TRUE)
 
+barplot(sort(itemFrequency(trans), decreasing=FALSE), type="absolute", n=20, col="mistyrose2",xlab="Item name", 
+        ylab="Frequency (absolute)", main="Top 25 Absolute Item Frequency Plot")
+
 # Absolute Item Frequency Plot
-itemFrequencyPlot(trans, topN=15, type="absolute", col="wheat2",xlab="Item name", 
-                  ylab="Frequency (absolute)", main="Absolute Item Frequency Plot")
+itemFrequencyPlot(trans, decreasing=TRUE, topN=25, type="absolute", col="mistyrose2",xlab="Item name", 
+                  ylab="Frequency (absolute)", main="Top 25 Absolute Item Frequency Plot")
+
+# Absolute Item Frequency Plot
+itemFrequencyPlot(trans, topN=25, type="absolute", col="mistyrose2",xlab="Item name", 
+                  ylab="Frequency (absolute)", main="Top 25 Absolute Item Frequency Plot")
 
 
 ################ Analysis taking into account the Date and Time
@@ -61,16 +68,17 @@ bakery %>%
   labs(title="Transactions per month") +
   theme_bw()
 
+par(mfrow=c(1,2))
+
 # Transactions per weekday
-bakery %>%
-  mutate(WeekDay=as.factor(weekdays(as.Date(Date)))) %>%
-  group_by(WeekDay) %>%
+week1 <- bakery %>%
+  mutate(Day = wday(Date,label=T)) %>%
+  group_by(Day) %>%
   summarise(Transactions=n_distinct(Transaction)) %>%
-  ggplot(aes(x=WeekDay, y=Transactions)) +
-  geom_bar(stat="identity", fill="peachpuff2", show.legend=FALSE) +
-  geom_label(aes(label=Transactions)) +
+  ggplot(aes(x=Day, y=Transactions)) +
+  geom_bar(stat="identity", fill="mistyrose2", show.legend=FALSE) +
+  geom_label(aes(label=Transactions), vjust=2) +
   labs(title="Transactions per weekday") +
-  scale_x_discrete(limits=c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")) +
   theme_bw()
 
 # How many items to people purchase on average
@@ -90,21 +98,22 @@ itemAvg.3 <- data.frame(itemAvg.1, # Days, total items
                    itemAvg.1[2]/itemAvg.2[2])  # items per unique transaction
 colnames(itemAvg.3) <- c("Day","Line","Unique","Items.Trans")
 
-ggplot(itemAvg.3,aes(x=Day,y=Items.Trans,fill=Day))+
-  theme_fivethirtyeight()+
-  geom_bar(stat="identity", fill="peachpuff2")+
-  ggtitle("Items purchased on average per weekday")+
+week2 <- ggplot(itemAvg.3,aes(x=Day,y=Items.Trans))+
+  geom_bar(stat="identity", fill="mistyrose2", show.legend=FALSE)+
+  ggtitle("Items purchased on average")+
   theme(legend.position="none")+
-  geom_text(aes(label=round(Items.Trans,1)), vjust=2)
+  geom_label(aes(label=round(Items.Trans,1)), vjust=2) +
+  theme_bw()
 
+grid.arrange(week1, week2, nrow = 1)
 
 # Transactions per hour
-bakery %>%
+hour1 <- bakery %>%
   mutate(Hour=as.factor(hour(Time))) %>%
   group_by(Hour) %>%
   summarise(Transactions=n_distinct(Transaction)) %>%
   ggplot(aes(x=Hour, y=Transactions)) +
-  geom_bar(stat="identity", fill="steelblue1", show.legend=FALSE) +
+  geom_bar(stat="identity", fill="mistyrose2", show.legend=FALSE) +
   geom_label(aes(label=Transactions)) +
   labs(title="Transactions per hour") +
   theme_bw()
@@ -126,14 +135,15 @@ itemTransHour.3 <- data.frame(itemTransHour.1, # Days, total items
                    itemTransHour.1[2]/itemTransHour.2[2])  # items per unique transaction
 colnames(itemTransHour.3) <- c("Hour","Line","Unique","Items.Trans")
 
-itemTransHour <- 
-  ggplot(itemTransHour.3,aes(x=Hour,y=Items.Trans,fill=Hour))+
+hour2 <- ggplot(itemTransHour.3,aes(x=Hour,y=Items.Trans))+
   theme_fivethirtyeight()+
-  geom_bar(stat="identity")+
+  geom_bar(stat="identity", fill="mistyrose2")+
   ggtitle("Total items per transaction per hour")+
   theme(legend.position="none")+
-  geom_text(aes(label=round(Items.Trans,1)), vjust=2)
-itemTransHour
+  geom_label(aes(label=round(Items.Trans,1)), vjust=2) +
+  theme_bw()
+
+grid.arrange(hour1, hour2, nrow = 1)
 
 # Tema horas --> 
 
@@ -176,3 +186,5 @@ waste = c(0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0
           1, 0, 0, 0, 1, 1, 0, 0, 0, 1, 0, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0,
           1, 1, 1, 0, 1, 0, 0, 1, 1, 1)
 products$waste = waste
+
+summary(bakery$Item)

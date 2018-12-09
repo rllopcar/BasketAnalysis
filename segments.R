@@ -56,4 +56,6 @@ write.csv(weekDays, "weekDays.csv", row.names = FALSE)
 write.csv(saturday, "saturday.csv", row.names = FALSE)
 write.csv(sunday, "sunday.csv", row.names = FALSE)
 
+# Minimum value for Time
+min <- complete[ complete[,"Time"] < hms("8H 20M 0S") , ]
 
